@@ -119,7 +119,9 @@ class PackageBuilder:
         if cfg.has_section('x-flonda') and ('requires' in cfg['x-flonda']):
             return py + cfg['x-flonda']['requires'].splitlines()
         else:
-            return py + list(self.metadata.requires_dist)
+            from .requirements import requires_dist_to_conda_requirements
+            return py + requires_dist_to_conda_requirements(self.metadata.requires_dist,
+                            self.python_version, self.platform, self.bitness)
 
     def write_index(self, tf):
         a = {
