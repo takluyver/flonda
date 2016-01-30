@@ -49,3 +49,6 @@ def build_multi(ini_path, dist_dir, pythons, platforms):
                 pb.metadata.name, pb.metadata.version, py.replace('.', ''))
             with (dist_dir / plat / filename).open('wb') as f:
                 pb.build(f)
+
+    # The filename should be the same for all of them
+    print("Packages are now in", dist_dir / '*' / filename)
