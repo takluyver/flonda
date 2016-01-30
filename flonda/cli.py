@@ -51,4 +51,5 @@ def build_multi(ini_path, dist_dir, pythons, platforms):
                 pb.build(f)
 
     # The filename should be the same for all of them
+    filename = '{}-{}-*.tar.bz2'.format(pb.metadata.name, pb.metadata.version)
     print("Packages are now in", dist_dir / '*' / filename)
