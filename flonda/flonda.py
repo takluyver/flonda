@@ -1,15 +1,10 @@
+import json
 import os
 from pathlib import Path
 import posixpath
 from flit import inifile, common
-from enum import Enum
 import tarfile
 from io import BytesIO
-
-class Platform(Enum):
-    linux = 1
-    osx = 2
-    windows = 3
 
 pkgdir = Path(__file__).parent
 
@@ -32,13 +27,13 @@ class PackageBuilder:
             self.has_prefix_files.append(arcname)
 
     def site_packages_path(self):
-        if self.platform is Platform.windows:
+        if self.platform is 'windows':
             return 'Lib/site-packages/'
         else:
             return 'lib/python{}/site-packages/'.format(self.python_version)
 
     def scripts_path(self):
-        if self.platform is Platform.windows:
+        if self.platform is 'windows':
             return 'Scripts/'
         else:
             return 'bin/'
@@ -47,7 +42,7 @@ class PackageBuilder:
         with tarfile.open(fileobj=fileobj, mode='w:bz2') as tf:
             self.add_module(tf)
             self.create_scripts(tf)
-            #self.write_index(tf)
+            self.write_index(tf)
             self.write_has_prefix_list(tf)
             self.write_files_list(tf)
 
@@ -103,13 +98,45 @@ class PackageBuilder:
                 # This is replaced when the package is installed:
                 interpreter='/opt/anaconda1anaconda2anaconda3/bin/python',
             )
-            if self.platform == Platform.windows:
+            if self.platform == 'windows':
                 self._write_script_windows(tf, name, s)
             else:
                 self._write_script_unix(tf, name, s)
 
+    def _find_license(self):
+        if self.metadata.license:
+            return self.metadata.license
+
+        for cl in self.metadata.classifiers:
+            if cl.startswith('License :: OSI Approved :: '):
+                return cl[len('License :: OSI Approved :: '):]
+
+        return ''
+
+    def _get_dependencies(self):
+        py = ["python {}*".format(self.python_version)]
+        cfg = self.ini_info['raw_config']
+        if cfg.has_section('x-flonda') and ('requires' in cfg['x-flonda']):
+            return py + cfg['x-flonda']['requires'].splitlines()
+        else:
+            return py + list(self.metadata.requires_dist)
+
     def write_index(self, tf):
-        raise NotImplementedError
+        a = {
+          "arch": ("x86_64" if self.bitness=='64' else 'x86'),
+          "build": "py{}_0".format(self.python_version.replace('.', '')),
+          "build_number": 0,
+          "depends": self._get_dependencies(),
+          "license": self._find_license(),
+          "name": self.metadata.name,
+          "platform": self.platform,
+          "subdir": "{}-{}".format(self.platform, self.bitness),
+          "version": self.metadata.version,
+        }
+        contents = json.dumps(a, indent=2, sort_keys=True).encode('utf-8')
+        ti = tarfile.TarInfo('info/index.json')
+        ti.size = len(contents)
+        tf.addfile(ti, BytesIO(contents))
 
     def write_has_prefix_list(self, tf):
         if not self.has_prefix_files:
@@ -127,6 +154,6 @@ class PackageBuilder:
 
 if __name__ == '__main__':
     ini_path = Path('/home/takluyver/Code/astcheck/flit.ini')
-    pb = PackageBuilder(ini_path, '3.5', Platform.linux, '64')
+    pb = PackageBuilder(ini_path, '3.5', 'linux', '64')
     with open('test_pkg.tar.bz2', 'wb') as f:
         pb.build(f)
