@@ -12,4 +12,4 @@ def test_environment_markers():
 
 
     assert eval_env_marker("'linux' in sys.platform", "3.5", "linux", "64") == True
-    assert eval_env_marker("'linux' in sys.platform", "3.5", "windows", "64") == False
+    assert eval_env_marker("'linux' in sys.platform", "3.5", "win", "64") == False

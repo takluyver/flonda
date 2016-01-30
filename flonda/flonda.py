@@ -27,13 +27,13 @@ class PackageBuilder:
             self.has_prefix_files.append(arcname)
 
     def site_packages_path(self):
-        if self.platform is 'windows':
+        if self.platform == 'win':
             return 'Lib/site-packages/'
         else:
             return 'lib/python{}/site-packages/'.format(self.python_version)
 
     def scripts_path(self):
-        if self.platform is 'windows':
+        if self.platform == 'win':
             return 'Scripts/'
         else:
             return 'bin/'
@@ -98,7 +98,7 @@ class PackageBuilder:
                 # This is replaced when the package is installed:
                 interpreter='/opt/anaconda1anaconda2anaconda3/bin/python',
             )
-            if self.platform == 'windows':
+            if self.platform == 'win':
                 self._write_script_windows(tf, name, s)
             else:
                 self._write_script_unix(tf, name, s)

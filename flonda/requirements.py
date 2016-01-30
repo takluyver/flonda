@@ -3,13 +3,13 @@ import ast
 sys_platforms = {
     'linux': 'linux',
     'osx': 'darwin',
-    'windows': 'win32',
+    'win': 'win32',
 }
 
 os_names = {
     'linux': 'posix',
     'osx': 'posx',
-    'windows': 'nt',
+    'win': 'nt',
 }
 
 platform_machines = {
