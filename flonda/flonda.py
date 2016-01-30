@@ -1,4 +1,6 @@
+import os
 from pathlib import Path
+import posixpath
 from flit import inifile, common
 from enum import Enum
 import tarfile
@@ -14,8 +16,9 @@ pkgdir = Path(__file__).parent
 class PackageBuilder:
     def __init__(self, ini_path, python_version, platform, bitness):
         self.ini_path = ini_path
+        self.directory = ini_path.parent
         self.ini_info = ini_info = inifile.read_pkg_ini(ini_path)
-        self.module = common.Module(ini_info['module'], ini_path.parent)
+        self.module = common.Module(ini_info['module'], self.directory)
         self.metadata = common.make_metadata(self.module, ini_info)
         self.python_version = python_version
         self.platform = platform
@@ -48,10 +51,36 @@ class PackageBuilder:
             self.write_has_prefix_list(tf)
             self.write_files_list(tf)
 
+    def _include(self, path):
+        name = os.path.basename(path)
+        if (name == '__pycache__') or name.endswith('.pyc'):
+            return False
+        return True
+
     def add_module(self, tf):
-        src = str(self.module.path)
-        dst = self.site_packages_path() + self.module.path.name
-        tf.add(src, arcname=dst)
+        if self.module.is_package:
+            for dirpath, dirs, files in os.walk(str(self.module.path)):
+                reldir = os.path.relpath(dirpath, str(self.directory))
+                for f in sorted(files):
+                    full_path = os.path.join(dirpath, f)
+                    if self._include(full_path):
+                        in_archive = posixpath.join(self.site_packages_path(), reldir, f)
+                        tf.add(full_path, in_archive)
+                        self.record_file(in_archive)
+
+                dirs[:] = [d for d in sorted(dirs) if self._include(d)]
+                for d in dirs:
+                    full_path = os.path.join(dirpath, d)
+                    tf.add(full_path,
+                           posixpath.join(self.site_packages_path(), reldir, d),
+                           recursive=False)
+
+        else:
+            # Module is a single file
+            src = str(self.module.path)
+            dst = self.site_packages_path() + self.module.path.name
+            tf.add(src, arcname=dst)
+            self.record_file(dst)
 
     def _write_script_unix(self, tf, name, contents):
         ti = tarfile.TarInfo(self.scripts_path() + name)
@@ -83,6 +112,8 @@ class PackageBuilder:
         raise NotImplementedError
 
     def write_has_prefix_list(self, tf):
+        if not self.has_prefix_files:
+            return
         contents = '\n'.join(self.has_prefix_files).encode('utf-8')
         ti = tarfile.TarInfo('info/has_prefix')
         ti.size = len(contents)
