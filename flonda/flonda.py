@@ -17,7 +17,9 @@ class PackageBuilder:
         self.metadata = common.make_metadata(self.module, ini_info)
         self.python_version = python_version
         self.platform = platform
+        assert platform in {'osx', 'linux', 'win'}, platform
         self.bitness = bitness
+        assert bitness in {'32', '64'}, bitness
         self.files = []
         self.has_prefix_files = []
 
@@ -87,7 +89,7 @@ class PackageBuilder:
     def _write_script_windows(self, tf, name, contents):
         from win_cli_launchers import find_exe
         self._write_script_unix(tf, name+'-script.py', contents)
-        src = find_exe(arch=('x86' if self.bitness == 32 else 'x64'))
+        src = find_exe(arch=('x86' if self.bitness == '32' else 'x64'))
         dst = self.scripts_path() + name + '.exe'
         tf.add(src, arcname=dst)
         self.record_file(dst)
