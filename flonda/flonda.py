@@ -85,8 +85,9 @@ class PackageBuilder:
         self.record_file(ti.name)
 
     def _write_script_windows(self, tf, name, contents):
+        from win_cli_launchers import find_exe
         self._write_script_unix(tf, name+'-script.py', contents)
-        src = str(pkgdir / 'cli-{}.exe'.format(self.bitness))
+        src = find_exe(arch=('x86' if self.bitness == 32 else 'x64'))
         dst = self.scripts_path() + name + '.exe'
         tf.add(src, arcname=dst)
         self.record_file(dst)
