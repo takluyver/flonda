@@ -1,6 +1,6 @@
 Flonda is an experimental tool to publish pure Python code as conda packages
 
-Installation:
+Installation::
 
     pip install flonda
 
@@ -14,7 +14,7 @@ module or package. Then
     # Build conda packages (with flit.ini in CWD)
     flonda build
 
-    # Install anaconda.org client
+    # Set up anaconda.org client
     conda install anaconda-client
     anaconda login
 
