@@ -85,7 +85,7 @@ class PackageBuilder:
         ti.size = len(contents)
         ti.mode = 0o755  # Set executable bit
         tf.addfile(ti, BytesIO(contents))
-        self.record_file(ti.name)
+        self.record_file(ti.name, has_prefix=True)
 
     def _write_script_windows(self, tf, name, contents):
         from win_cli_launchers import find_exe
