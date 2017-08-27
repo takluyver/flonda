@@ -1,5 +1,6 @@
 import argparse
 import pathlib
+import subprocess
 import sys
 
 from . import __version__
@@ -19,6 +20,8 @@ def main(argv=None):
 
     parser_build = subparsers.add_parser('build',
          help='Build conda packages')
+    parser_publish = subparsers.add_parser('publish',
+         help='Build conda packages & publish to anaconda.org')
 
     args = ap.parse_args(argv)
 
@@ -39,12 +42,17 @@ def main(argv=None):
 
     if args.subcmd == 'build':
         build_multi(args.ini_file, dist_dir, pythons, platforms)
+    elif args.subcmd == 'publish':
+        files = build_multi(args.ini_file, dist_dir, pythons, platforms)
+        publish_packages(files)
     else:
         ap.print_help()
         sys.exit(1)
 
 
 def build_multi(ini_path, dist_dir, pythons, platforms):
+    built_packages = []
+
     for plat in platforms:
         try:
             (dist_dir / plat).mkdir(parents=True)
@@ -54,11 +62,20 @@ def build_multi(ini_path, dist_dir, pythons, platforms):
         platform, bitness = plat.split('-')
         for py in pythons:
             pb = PackageBuilder(ini_path, py, platform, bitness)
+            # TODO: Build numbers aren't always 0
             filename = '{}-{}-py{}_0.tar.bz2'.format(
                 pb.metadata.name, pb.metadata.version, py.replace('.', ''))
-            with (dist_dir / plat / filename).open('wb') as f:
+            pkg_path = dist_dir / plat / filename
+            with pkg_path.open('wb') as f:
                 pb.build(f)
+
+            built_packages.append(pkg_path)
 
     # The filename should be the same for all of them
     filename = '{}-{}-*.tar.bz2'.format(pb.metadata.name, pb.metadata.version)
     print("Packages are now in", dist_dir / '*' / filename)
+    return built_packages
+
+def publish_packages(package_files):
+    print("Uploading {} files to anaconda.org...".format(len(package_files)))
+    subprocess.run(['anaconda', 'upload'] + package_files, check=True)
