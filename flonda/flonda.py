@@ -158,8 +158,3 @@ class PackageBuilder:
         ti.size = len(contents)
         tf.addfile(ti, BytesIO(contents))
 
-if __name__ == '__main__':
-    ini_path = Path('/home/takluyver/Code/astcheck/flit.ini')
-    pb = PackageBuilder(ini_path, '3.5', 'linux', '64')
-    with open('test_pkg.tar.bz2', 'wb') as f:
-        pb.build(f)
