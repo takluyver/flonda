@@ -83,6 +83,7 @@ class PackageBuilder:
         ti = tarfile.TarInfo(self.scripts_path() + name)
         contents = contents.encode('utf-8')
         ti.size = len(contents)
+        ti.mode = 0o755  # Set executable bit
         tf.addfile(ti, BytesIO(contents))
         self.record_file(ti.name)
 
