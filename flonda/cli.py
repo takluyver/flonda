@@ -15,6 +15,11 @@ def main(argv=None):
     ap.add_argument('--platforms', help='Comma separated conda platforms to build for')
     ap.add_argument('--ini-file', type=pathlib.Path, default='flit.ini')
     ap.add_argument('--dist-dir', type=pathlib.Path)
+    subparsers = ap.add_subparsers(title='subcommands', dest='subcmd')
+
+    parser_build = subparsers.add_parser('build',
+         help='Build conda packages')
+
     args = ap.parse_args(argv)
 
     if args.pythons:
@@ -32,7 +37,11 @@ def main(argv=None):
     else:
         dist_dir = args.ini_file.parent / 'dist'
 
-    build_multi(args.ini_file, dist_dir, pythons, platforms)
+    if args.subcmd == 'build':
+        build_multi(args.ini_file, dist_dir, pythons, platforms)
+    else:
+        ap.print_help()
+        sys.exit(1)
 
 
 def build_multi(ini_path, dist_dir, pythons, platforms):
