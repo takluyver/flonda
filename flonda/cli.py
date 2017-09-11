@@ -78,4 +78,7 @@ def build_multi(ini_path, dist_dir, pythons, platforms):
 
 def publish_packages(package_files):
     print("Uploading {} files to anaconda.org...".format(len(package_files)))
-    subprocess.run(['anaconda', 'upload'] + package_files, check=True)
+    subprocess.run(
+        ['anaconda', 'upload'] + [str(f) for f in package_files], 
+        check=True
+    )
