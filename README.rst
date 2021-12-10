@@ -1,3 +1,8 @@
+**Archived:** Flonda was an experiment in creating a subset of conda packages
+without going through a recipe file and conda-build. It didn't take off, and
+when conda gained support for 'noarch' packages, there was much less need for
+a tool like this.
+
 Flonda is an experimental tool to publish pure Python code as conda packages
 
 Installation::
